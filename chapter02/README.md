@@ -17,7 +17,7 @@ docker images
 ### 1.2. Running the container image
 
 #### 1.2.1. Running the container image
-This tells Docker to run a new container called kubia-container from the kubia image. The container is detached from the console (-d flag) and runs in the background. Port 1234 on the host computer is mapped to port 8080 in the container (specified by the -p 1234:8080 option), so you can access the app at [localhost:1234](http://localhost:1234).
+This tells Docker to run a new container called kubia-container from the kubia image. The container is detached from the console (`-d` flag) and runs in the background. Port `1234` on the host computer is mapped to port `8080` in the container (specified by the `-p 1234:8080` option), so you can access the app at [localhost:1234](http://localhost:1234).
 ```
 docker run --name kubia-container -p 1234:8080 -d kubia
 ```
@@ -39,7 +39,7 @@ docker logs kubia-container
 
 ### 1.3. Distributing container images
 #### 1.3.1. Tagging an image under an additional tag
-Replace `alisktl` with your actual Docker Hub ID
+> `NOTE:` Replace `alisktl` with your actual Docker Hub ID
 ```
 docker tag kubia alisktl/kubia:1.0
 ```
@@ -55,7 +55,7 @@ or if you use Docker Desktop
 docker login
 ```
 
-Push the alisktl/kubia:1.0 image to Docker Hub with the following command
+Push the `alisktl/kubia:1.0` image to Docker Hub with the following command
 ```
 docker push alisktl/kubia:1.0
 ```
@@ -84,11 +84,23 @@ docker rmi kubia:latest
 ## 2. Understanding what makes containers possible
 
 ### 2.1. Using Namespaces to customize the environment of a process
+The first feature called `Linux Namespaces` ensures that each process has its own view of the system. This means that a process running in a container will only see some of the files processes and network interfaces on the system, as well as a different hostname, just as if it were running in a separate virtual machine.
 
+#### 2.1.1. Introducing the available namespaces
+More specifically, there isn't just a single type of namespace. There are in fact several types - one for each resource type. A process thus uses not only one namespace, but one namespace for each type.
+
+The following types of namespaces exist:
+* The Mount namespace (`mnt`) isolates mount points (file systems).
+* The Process ID namespace (`pid`) isolates process IDs.
+* The Network namespace (`net`) isolates network devices, stacks, ports, etc.
+* The Inner-process communication namespace (`ipc`) isolates the communication between processes (this includes isolating message queues, shared memory, and others).
+* The UNIX Time-sharing System (`UTS`) namespace isolates the system hostname and Network Information Service (NIS) domain name.
+* The User ID namespace (`user`) isolates user and group IDs.
+* The `Cgroup` namespace isolates the Control Groups root directory.
 
 ### 2.2. Exploring environment of a running container
 #### 2.2.1. Running a shell inside an existing container
-This command runs bash as an additional process in the existing kubia-container container. The process has the same Linux namespaces as the main container process (the running Node.js server).
+This command runs bash as an additional process in the existing `kubia-container` container. The process has the same Linux namespaces as the main container process (the running Node.js server).
 ```
 docker exec -it kubia-container bash
 ```
@@ -103,26 +115,24 @@ ps aux
 exit
 ```
 
-### 2.3. Limiting a process’ resource usage with Linux Control Groups
+### 2.3. Limiting a process’ resource usage with `Linux Control Groups`
 #### 2.3.1. Introducing cgroups
-Linux kernel feature that makes containers possible is called Linux Control Groups (cgroups). It limits, accounts for and isolates system resources such as CPU, memory and disk or network bandwidth. When using cgroups, a process or group of processes can only use the allotted CPU time, memory, and network bandwidth for example. This way, processes cannot occupy resources that are reserved for other processes.
+The second Linux kernel feature that makes containers possible is called `Linux Control Groups (cgroups)`. It limits, accounts for and isolates system resources such as CPU, memory and disk or network bandwidth. When using cgroups, a process or group of processes can only use the allotted CPU time, memory, and network bandwidth for example. This way, processes cannot occupy resources that are reserved for other processes.
 
 #### 2.3.2. Limiting a container's use of the CPU
-a. You can explicitly specify which cores a container can use with Docker’s --cpuset-cpus option. For example, to allow the container to only use cores one and two, you can run the container with the following option:
+* You can explicitly specify which cores a container can use with Docker’s `--cpuset-cpus` option. For example, to allow the container to only use cores one and two, you can run the container with the following option:
+```
 docker run --cpuset-cpus="1,2" -p 1234:8080 -d kubia
+```
 
-b. You can also limit the available CPU time using options --cpus, --cpu-period, --cpu-quota and --cpu-shares. For example, to allow the container to use only half of a CPU core, run the container as follows:
+* You can also limit the available CPU time using options `--cpus`, `--cpu-period`, `--cpu-quota` and `--cpu-shares`. For example, to allow the container to use only half of a CPU core, run the container as follows:
+```
 docker run --cpus="0.5" -p 1234:8080 -d kubia
+```
 
 #### 2.3.3. Limiting a container's use of memory
-Docker provides the following options to limit container memory and swap usage: --memory, --memory-reservation, --kernel-memory, - -memory-swap, and --memory-swappiness.
-For example, to set the maximum memory size available in the container to 100MB, run the container as follows (`m` stands for megabyte):
+Docker provides the following options to limit container memory and swap usage: `--memory`, `--memory-reservation`, `--kernel-memory`, `--memory-swap`, and `--memory-swappiness`.
+For example, to set the maximum memory size available in the container to `100MB`, run the container as follows (`m` stands for megabyte):
+```
 docker run --memory="100m" -p 1234:8080 -d kubia
-
-
-
-
-
-
-
-
+```
